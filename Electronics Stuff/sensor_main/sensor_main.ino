@@ -2,6 +2,8 @@
 #include <WiFi.h>
 #include "time.h"
 
+//Sensor ID
+String sensor_ID = "1";
 
 //wifi ssid and password (using wahoo)
 const char *ssid = "wahoo";
@@ -109,7 +111,7 @@ void senddata(const char * host, uint8_t port, const char * directory) //takes s
   wifi_init();
   
   //obtain UTC
-  configTime(0, 0, ntpServer); ////////claude
+  configTime(0, 0, ntpServer);
 
   struct tm timeinfo;
   while (!getLocalTime(&timeinfo)) {
@@ -118,14 +120,16 @@ void senddata(const char * host, uint8_t port, const char * directory) //takes s
   }
 
   char buf[25];
-  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo); //change in sensors_main as well
+  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
   String timestamp = String(buf);
   timestamp.replace(" ", "%20");
   timestamp.replace(":", "%3A");
   Serial.println(&timeinfo, "UTC: %Y-%m-%d %H:%M:%S");
 
+  //construct get_request
   String get_request = "GET " + String(directory) + "?time=";
   get_request += timestamp;
+  get_request += ("&sensorid=" + sensor_ID);
   get_request += request_append;
 
   Serial.println(get_request);
