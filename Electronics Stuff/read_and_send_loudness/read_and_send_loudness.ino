@@ -45,9 +45,9 @@ void wifi_disconnect() // function to disconnect from WiFi
 }
 
 //domain, port, and directory variables (SPECIFIC TO DATABASE)
-const char * hostDomain = "54.209.25.97"; //IP address of AWS server
+const char * hostDomain = "54.234.33.164"; //IP address of AWS server
 const int hostPort = 80; //port used for HTTP
-const char * hostDir = "/rodman/test_directory/test_add2database.php"; //directory and file called in HTTP request
+const char * hostDir = "/soundapp/esp32_sound/test_add2database.php"; //directory and file called in HTTP request
 
 void printLine()//printline function to print dashes until something completes
 {
