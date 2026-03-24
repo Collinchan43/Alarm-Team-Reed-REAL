@@ -1,10 +1,13 @@
 //include WiFi library
 #include <WiFi.h>
+#include "time.h"
 
 
 //wifi ssid and password (using wahoo)
 const char *ssid = "wahoo";
 const char *pwd = "";
+
+const char* ntpServer = "pool.ntp.org";
 
 //Set envelope pin and initialize envelope value
 const int enPin = 3;
@@ -46,9 +49,9 @@ void wifi_disconnect() // function to disconnect from WiFi
 }
 
 //domain, port, and directory variables (SPECIFIC TO DATABASE)
-const char * hostDomain = "58.234.33.164"; //IP address of AWS server
+const char * hostDomain = "54.234.33.164"; //IP address of AWS server
 const int hostPort = 80; //port used for HTTP
-const char * hostDir = "/soundapp/esp32_sound/test_add2database.php"; //directory and file called in HTTP request
+const char * hostDir = "/soundapp/esp32_sound/test_add2database2.php"; //directory and file called in HTTP request
 
 void printLine()//printline function to print dashes until something completes
 {
@@ -73,7 +76,8 @@ void senddata(const char * host, uint8_t port, const char * directory) //takes s
   Serial.println("Calibrating sensor to surrounding sound level...");
 
   int loudness = 0;
-  String get_request = "GET " + String(directory) + "?reading=";
+  //String get_request = "GET " + String(directory) + "?reading=";
+  String request_append = "&reading=";
 
   int i = 0;
   while (i < 100) { //adjusts for 10 seconds
@@ -83,16 +87,17 @@ void senddata(const char * host, uint8_t port, const char * directory) //takes s
   }
 
   //TAKE READING FOR UPLOAD TO DATABASE
+
   Serial.println("Reading ambient sound...");
 
   loudness=readEnvelope();
-  get_request += String(loudness);
+  request_append += String(loudness);
   delay(100);
   
   i = 0;
   while (i < 99) { //takes 100 total readings in 10 seconds (ADJUSTABLE)
     loudness = readEnvelope();
-    get_request += ";" + String(loudness);
+    request_append += ";" + String(loudness);
     i++;
     delay(100);
   }
@@ -102,6 +107,28 @@ void senddata(const char * host, uint8_t port, const char * directory) //takes s
 
   //connect to WiFi
   wifi_init();
+  
+  //obtain UTC
+  configTime(0, 0, ntpServer); ////////claude
+
+  struct tm timeinfo;
+  while (!getLocalTime(&timeinfo)) {
+    Serial.println("Waiting for NTP sync...");
+    delay(1000);
+  }
+
+  char buf[25];
+  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &timeinfo); //change in sensors_main as well
+  String timestamp = String(buf);
+  timestamp.replace(" ", "%20");
+  timestamp.replace(":", "%3A");
+  Serial.println(&timeinfo, "UTC: %Y-%m-%d %H:%M:%S");
+
+  String get_request = "GET " + String(directory) + "?time=";
+  get_request += timestamp;
+  get_request += request_append;
+
+  Serial.println(get_request);
 
   //connect to server
   printLine();
