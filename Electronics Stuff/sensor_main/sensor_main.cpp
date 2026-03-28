@@ -1,8 +1,9 @@
 //Source file: defines all functions, declares and defines all variables to be used within them
 //If you want to access a variable from the main program, you must extern declare it from header as well then define it here! Main program can only pull from hedaer!
 
-#include <kane_functions.h>
+#include <sensor_main.h>
 
+//declare variables to be used in functions
 const char *ssid = "wahoo";
 const char *pwd = "";
 
@@ -19,6 +20,7 @@ int reading_total = 0;
 
 decode_results results;
 
+//define functions
 void syncBoard(const int kRecvPin, const int IRreceiverPowerPin)
 {
   IRrecv irrecv(kRecvPin);
