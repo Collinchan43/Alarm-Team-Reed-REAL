@@ -7,12 +7,12 @@
 
 //MODIFY THESE PARAMETERS BEFORE UPLOADING CODE TO BOARD
 const int envelopePin = 3;
-String database_to_send = "Kane"; //either "Landan" or "Kane"
+String database_to_send = "Landan"; //either "Landan" or "Kane"
 const int samplingHz = 100; //readings per second
-const int samplingDur = 2; //duration of sampling in seconds
+const int samplingDur = 10; //duration of sampling in seconds
 const int IRpowerPin = 5; //pin providing power to IR receiver
 const int IRsignalPin = 10; //pin connected to IR revceiver OUT
-const double minutes_between_readings = 0.33; //time between readings in minutes; CHANGE VAR TYPE FOR INT VALUES
+const double minutes_between_readings = 10; //time between readings in minutes; CHANGE VAR TYPE FOR INT VALUES
 
 //Sensor ID is automatically detected by the board using its MAC Address. If the labels or sensors are changed, update sensor_main.cpp accordingly
 
