@@ -32,6 +32,9 @@ void setup() {
   sync_time = millis(); //sets sync_time to time the board was synced (in ms relative to when board was last reset)
   Serial.print("The millis() time this board was synced was ");
   Serial.println(sync_time);
+
+  senddata(envelopePin, database_to_send, samplingHz, samplingDur);
+
 }
 
 void loop() {
