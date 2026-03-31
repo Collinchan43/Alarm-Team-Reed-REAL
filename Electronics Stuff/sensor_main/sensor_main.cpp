@@ -85,7 +85,7 @@ void wifi_init() // function to connect to WiFi
     sensor_ID = "3";
   }
 
-  else if (mac_address == "58:CF:79:DA:55:B4"){
+  else if (mac_address == "58:CF:79:D8:78:40"){
     sensor_ID = "4";
   }
 
