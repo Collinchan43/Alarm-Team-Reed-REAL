@@ -20,6 +20,8 @@ int reading_total = 0;
 
 decode_results results;
 
+String sensor_ID = "";
+
 //define functions
 void syncBoard(const int kRecvPin, const int IRreceiverPowerPin)
 {
@@ -69,6 +71,28 @@ void wifi_init() // function to connect to WiFi
   Serial.print("Board MAC Address: ");
   Serial.println(WiFi.macAddress());
 
+  //Identify sensor; CHANGE IF LABELS OR SENSORS ARE CHANGED
+  String mac_address = String(WiFi.macAddress());
+  if (mac_address == "58:CF:79:D9:8D:7C"){
+    sensor_ID = "1";
+  }
+
+  else if (mac_address == "58:CF:79:D8:AF:68"){
+    sensor_ID = "2";
+  }
+
+  else if (mac_address == "58:CF:79:D9:89:00"){
+    sensor_ID = "3";
+  }
+
+  else if (mac_address == "58:CF:79:DA:55:B4"){
+    sensor_ID = "4";
+  }
+
+  else {
+    sensor_ID = "0"; //using 0 for unknown sensor
+  }
+
   //Start a WiFi connection:
   WiFi.begin(ssid, pwd);
   Serial.println("\nConnecting to WiFi");
@@ -111,7 +135,7 @@ int readEnvelope(const int enPin) //function to read and serial print analog sou
 }
 
 //need to have unique Sensor ID referred to in this function, so including it has a parameter rather than defining it and the referring to it. This way, it can be changed in the main program.
-void senddata(String sensor, const int envPin, String database, const int Hz, const int Dur) //takes sound readings and makes url string, THEN connects to WiFi, THEN DISCONNECTS from WiFi (this is necessary to ensure the sound level is accurate)
+void senddata(const int envPin, String database, const int Hz, const int Dur) //takes sound readings and makes url string, THEN connects to WiFi, THEN DISCONNECTS from WiFi (this is necessary to ensure the sound level is accurate)
 {
   //read sound and construct GET request
 
@@ -186,7 +210,7 @@ void senddata(String sensor, const int envPin, String database, const int Hz, co
   //construct get_request
   String get_request = "GET " + String(directory) + "?time=";
   get_request += timestamp;
-  get_request += ("&sensorid=" + sensor);
+  get_request += ("&sensorid=" + sensor_ID);
   get_request += request_append;
 
   Serial.println(get_request);

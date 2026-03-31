@@ -16,6 +16,6 @@ void printLine();
 
 int readEnvelope(const int enPin);
 
-void senddata(String sensor, const int envPin, String database, const int Hz, const int Dur);
+void senddata(const int envPin, String database, const int Hz, const int Dur);
 
 void syncBoard(const int kRecvPin, const int IRreceiverPowerPin);
