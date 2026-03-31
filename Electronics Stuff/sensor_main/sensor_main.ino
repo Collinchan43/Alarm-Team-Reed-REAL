@@ -20,6 +20,7 @@ const double minutes_between_readings = 10; //time between readings in minutes; 
 int sync_time = 0;
 int time_elapsed = 0;
 const int time_between_readings = ((minutes_between_readings*60)*1000);
+int counter = 1;
 
 void setup() {
   // put your setup code here, to run once:
@@ -37,8 +38,9 @@ void loop() {
   // put your main code here, to run repeatedly:
   time_elapsed = (millis() - sync_time); //using millis() because it tracks time since board was reset independently of any program running
 
-  if (time_elapsed % time_between_readings == 0){
+  if (time_elapsed >= (counter*time_between_readings)){
     senddata(envelopePin, database_to_send, samplingHz, samplingDur);
-    delay(1); //must include delay or else this will repeat 3 times; WILL IT FOR A LONG FUNCTION LIKE senddata() THOUGH?
+    delay(1);
+    counter++;
   }
 }
