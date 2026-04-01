@@ -18,54 +18,102 @@ char * directory = "";
 int delay_time = 0;
 int reading_total = 0;
 
-decode_results results;
-
 String sensor_ID = "";
 
-//define functions
-void syncBoard(const int kRecvPin, const int IRreceiverPowerPin)
-{
-  IRrecv irrecv(kRecvPin);
-  
-  pinMode(IRreceiverPowerPin, OUTPUT);
-  digitalWrite(IRreceiverPowerPin, HIGH); //turns on power to receiver
-  irrecv.enableIRIn();  // Start the receiver
-  Serial.println();
-  Serial.println("The board is ready to receive the IR sync signal. Please ensure you are in the line-of-sight of the IR receiver.");
 
-  bool Synced = false;
-  while (!Synced){ //repeat when board is not synced
+//Sender functions and variables
 
-    bool SignalReceived = false;
-    while (!SignalReceived){ //repeat when no signal is received
-      //Serial.println("Waiting to receive sync signal...");
-      SignalReceived = irrecv.decode(&results);
-      //without a delay here, the loop repeats every ~3 ms. So, boards will be synced to within 3 ms of each other. We will be sampling at 100 Hz, so 10 ms between each reading. This sync should be sufficient.
-      }
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; //this broadcasts to all MAC addresses
 
-    // print() & println() can't handle printing long longs. (uint64_t)
-    serialPrintUint64(results.value, HEX);
-    Serial.println("");
-    serialPrintUint64(results.value);
-    Serial.println("");
+typedef struct struct_message {
+  char a[32];
+  int b;
+  float c;
+  bool d;
+} struct_message;
 
-    if (results.value == 16720605){ //code corresponding to Play button on remote
-      Serial.println("Board has been synced.");
-      Synced = true;
-    }
+struct_message myData;
+esp_now_peer_info_t peerInfo;
 
-    else { //if a button was pressed but it was not Play
-      Serial.println("Play button was not pressed. Please press play button to sync board.");
-      irrecv.resume();  // Receive the next value
-    }
+void OnDataSent(const wifi_tx_info_t *txInfo, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+
+void initialize_esp_sender() {
+  esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE); //fix suggested by CLAUDE
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
   }
 
-  digitalWrite(IRreceiverPowerPin, LOW);
+  // Once ESPNow is successfully Init, we will register for Send CB to
+  // get the status of Transmitted packet
+  esp_now_register_send_cb(OnDataSent);
+  
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+  
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
 }
+
+void send_sync_signal() {
+  strcpy(myData.a, "THIS IS A CHAR");
+  myData.b = random(1,20);
+  myData.c = 1.2;
+  myData.d = false;
+
+  // Send message via ESP-NOW
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+
+  if (result == ESP_OK) {
+    Serial.println("Sent with success");
+  }
+
+  else {
+    Serial.println("Error sending the data");
+  }
+  
+}
+
+
+
+//Receiver functions
+
+bool received_sync = false;
+
+void OnDataRecv(const esp_now_recv_info *recvInfo, const uint8_t *data, int len) {
+  memcpy(&myData, data, sizeof(myData));
+  Serial.println("This printed line represents a dummy function executed upon the the board receiving an ESP NOW signal."); //could do an if statement to make it do different stuff depending on what the signal was...
+  //senddata(envelopePin, database_to_send, samplingHz, samplingDur);
+  received_sync = true;
+}
+
+void initialize_esp_receiver() {
+  esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE); //fix suggested by CLAUDE
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(OnDataRecv); //board is now always listening
+
+}
+
+
 
 void wifi_init() // function to connect to WiFi
 {
-  WiFi.mode(WIFI_STA); //Acting as a client
+  //WiFi.mode(STA); //Acting as a client
 
   //Get MAC Address:
   Serial.print("Board MAC Address: ");
@@ -179,6 +227,9 @@ void senddata(const int envPin, String database, const int Hz, const int Dur) //
   
   i = 1;
   while (i < reading_total) { //takes readings for upload
+    Serial.print("Reading number ");
+    Serial.print(i);
+    Serial.print(": ");
     loudness = readEnvelope(envPin);
     request_append += ";" + String(loudness);
     i++;

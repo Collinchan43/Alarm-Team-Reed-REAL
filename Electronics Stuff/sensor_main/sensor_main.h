@@ -4,9 +4,14 @@
 
 #include <WiFi.h>
 #include <time.h>
-#include <IRremoteESP8266.h>
-#include <IRrecv.h>
-#include <IRutils.h>
+#include <esp_now.h>
+#include <esp_wifi.h> //fix suggested by CLAUDE
+
+extern const int envelopePin; //trying to pull these from the main program so they can be used in a function in the souce file
+extern String database_to_send;
+extern const int samplingHz;
+extern const int samplingDur;
+
 
 void wifi_init(); // function to connect to WiFi
 
@@ -18,4 +23,21 @@ int readEnvelope(const int enPin);
 
 void senddata(const int envPin, String database, const int Hz, const int Dur);
 
-void syncBoard(const int kRecvPin, const int IRreceiverPowerPin);
+
+
+//Sender functions
+void OnDataSent(const wifi_tx_info_t *txInfo, esp_now_send_status_t status);
+
+void initialize_esp_sender();
+
+void send_sync_signal();
+
+
+
+//Receiver functions
+
+void OnDataRecv(const esp_now_recv_info *recvInfo, const uint8_t *data, int len);
+
+void initialize_esp_receiver();
+
+extern bool received_sync;
